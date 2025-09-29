@@ -62,10 +62,11 @@ import { AdminModule } from './admin/admin.module';
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         const redisErrorHandler = createRedisErrorHandler('CacheModule');
-        if (process.env.REDIS_URL) {
+        const redisUrl = configService.get('REDIS_URL')
+        if (redisUrl) {
           return {
             store: await redisStore({
-              url: process.env.REDIS_URL,
+              url: redisUrl,
               socket: {
                 tls: true,
                 rejectUnauthorized: false,
@@ -87,24 +88,29 @@ import { AdminModule } from './admin/admin.module';
             ttl: configService.get<number>('CACHE_TTL', 60), // Default ttl
           };
         };
+        // return {
+        //   store: await redisStore({
+        //     socket: {
+        //       host: configService.get<string>('REDIS_HOST', 'localhost'),
+        //       port: configService.get<number>('REDIS_PORT', 6379),
+        //       reconnectStrategy: (retries) => {
+        //         if (retries > 10) {
+        //           return new Error('Retry attempts exhausted');
+        //         }
+        //         if (retries > 0) {
+        //           redisErrorHandler.handleError(
+        //             new Error('Initial connection failed'),
+        //           );
+        //         }
+        //         return Math.min(retries * 100, 3000);
+        //       },
+        //     },
+        //   }),
+        //   max: configService.get<number>('CACHE_MAX', 100),
+        //   ttl: configService.get<number>('CACHE_TTL', 60),
+        // };
         return {
-          store: await redisStore({
-            socket: {
-              host: configService.get<string>('REDIS_HOST', 'localhost'),
-              port: configService.get<number>('REDIS_PORT', 6379),
-              reconnectStrategy: (retries) => {
-                if (retries > 10) {
-                  return new Error('Retry attempts exhausted');
-                }
-                if (retries > 0) {
-                  redisErrorHandler.handleError(
-                    new Error('Initial connection failed'),
-                  );
-                }
-                return Math.min(retries * 100, 3000);
-              },
-            },
-          }),
+          store: 'memory',
           max: configService.get<number>('CACHE_MAX', 100),
           ttl: configService.get<number>('CACHE_TTL', 60),
         };
