@@ -93,7 +93,7 @@ export class AuthService {
         throw new NotFoundException('User does not exist')
       }
       user.isEmailVerified = true;
-      const validate = await this.validateLoginPayload(user.id, user.email);
+      const validate = await this.validateLoginPayload(user.id, user.email, user.role);
       return {
         success: true,
         message: 'User verified successfully',
@@ -126,7 +126,7 @@ export class AuthService {
       if (!isPasswordValid) {
         throw new UnauthorizedException('Incorrect password, please check your password and try again')
       }
-      const validate = await this.validateLoginPayload(user.id, user.email);
+      const validate = await this.validateLoginPayload(user.id, user.email, user.role);
       return {
         message: 'Successfully validated user',
         success: true,
@@ -142,11 +142,12 @@ export class AuthService {
     }
   }
 
-  async validateLoginPayload(id: string, email: string) {
+  async validateLoginPayload(id: string, email: string, role: UserRole) {
     try {
       const payload = {
         sub: id,
-        email: email
+        email: email,
+        role: role
       }
       const token = await this.jwtService.signAsync(payload);
       return {

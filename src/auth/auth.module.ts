@@ -7,6 +7,7 @@ import { MailService } from './providers/mail.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
+import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
@@ -33,7 +34,8 @@ import { CacheModule } from '@nestjs/cache-manager';
   controllers: [AuthController],
   providers: [
     AuthService,
-    MailService
+    MailService,
+    JwtStrategy,
   ],
 })
 export class AuthModule { }

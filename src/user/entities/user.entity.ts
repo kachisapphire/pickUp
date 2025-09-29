@@ -18,9 +18,6 @@ export class User {
     @Column({ unique: true })
     email: string
 
-    @Column()
-    country: string
-
     @Column({ nullable: true, select: false })
     password: string
 

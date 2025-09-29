@@ -8,6 +8,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore, } from 'cache-manager-redis-yet';
 import { createRedisErrorHandler } from './utils/redis-error-handler';
+import { CategoryModule } from './category/category.module';
+import { ProductModule } from './product/product.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -16,6 +19,9 @@ import { createRedisErrorHandler } from './utils/redis-error-handler';
     }),
     AuthModule,
     UserModule,
+    CategoryModule,
+    ProductModule,
+    AdminModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

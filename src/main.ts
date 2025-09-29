@@ -22,7 +22,6 @@ async function bootstrap() {
         bearerFormat: 'JWT',
         in: 'header',
       },
-      'Authorization', // 👈 this name must match what Swagger UI uses
     )
     .build()
   const document = () => SwaggerModule.createDocument(app, config);
