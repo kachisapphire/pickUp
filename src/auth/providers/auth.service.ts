@@ -3,15 +3,15 @@ import { UserRole } from "../enum/user-role.enum";
 import { CreateUserDto } from "../dto/create-auth.dto";
 import { MailService } from "./mail.service";
 import { BadRequestException, Inject, Injectable, Logger, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+//import { ConfigService } from "@nestjs/config";
 import { User } from "src/user/entities/user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { JwtService } from "@nestjs/jwt";
 import { LoginDto } from "../dto/login.dto";
 import * as bcrypt from 'bcrypt'
-import { CACHE_MANAGER } from "@nestjs/cache-manager";
-import { Cache } from "cache-manager";
+// import { CACHE_MANAGER } from "@nestjs/cache-manager";
+// import { Cache } from "cache-manager";
 import { VerifyEmailDto } from "../dto/verify-email.dto";
 import redis from "src/utils/redis";
 
@@ -21,8 +21,8 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
-    private configService: ConfigService,
+    //@Inject(CACHE_MANAGER) private cacheManager: Cache,
+    //private configService: ConfigService,
     private readonly mailService: MailService,
     private readonly jwtService: JwtService,
   ) { }
@@ -93,6 +93,7 @@ export class AuthService {
         throw new NotFoundException('User does not exist')
       }
       user.isEmailVerified = true;
+      await this.userRepository.save(user);
       const validate = await this.validateLoginPayload(user.id, user.email, user.role);
       return {
         success: true,
@@ -116,8 +117,11 @@ export class AuthService {
   async login(dto: LoginDto) {
     try {
       const user = await this.userRepository.findOne({
-        where: { email: dto.email },
-        select: ['email', 'password']
+        where: {
+          email: dto.email,
+          role: UserRole.USER
+        },
+        select: ['email', 'password', 'id', 'role']
       });
       if (!user) {
         throw new NotFoundException('account not found, please create an account or try again')

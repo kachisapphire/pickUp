@@ -11,17 +11,21 @@ import { createRedisErrorHandler } from './utils/redis-error-handler';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { AdminModule } from './admin/admin.module';
+import { DevtoolsModule } from '@nestjs/devtools-integration';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true
+      isGlobal: true,
+      envFilePath: '.env',
     }),
     AuthModule,
     UserModule,
     CategoryModule,
     ProductModule,
     AdminModule,
+    OrderModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -65,7 +69,7 @@ import { AdminModule } from './admin/admin.module';
         const redisUrl = configService.get('REDIS_URL')
         if (redisUrl) {
           return {
-            store: await redisStore({
+            store: redisStore({
               url: redisUrl,
               socket: {
                 tls: true,
@@ -88,34 +92,32 @@ import { AdminModule } from './admin/admin.module';
             ttl: configService.get<number>('CACHE_TTL', 60), // Default ttl
           };
         };
-        // return {
-        //   store: await redisStore({
-        //     socket: {
-        //       host: configService.get<string>('REDIS_HOST', 'localhost'),
-        //       port: configService.get<number>('REDIS_PORT', 6379),
-        //       reconnectStrategy: (retries) => {
-        //         if (retries > 10) {
-        //           return new Error('Retry attempts exhausted');
-        //         }
-        //         if (retries > 0) {
-        //           redisErrorHandler.handleError(
-        //             new Error('Initial connection failed'),
-        //           );
-        //         }
-        //         return Math.min(retries * 100, 3000);
-        //       },
-        //     },
-        //   }),
-        //   max: configService.get<number>('CACHE_MAX', 100),
-        //   ttl: configService.get<number>('CACHE_TTL', 60),
-        // };
         return {
-          store: 'memory',
+          store: redisStore({
+            socket: {
+              host: configService.get<string>('REDIS_HOST', 'localhost'),
+              port: configService.get<number>('REDIS_PORT', 6379),
+              reconnectStrategy: (retries) => {
+                if (retries > 10) {
+                  return new Error('Retry attempts exhausted');
+                }
+                if (retries > 0) {
+                  redisErrorHandler.handleError(
+                    new Error('Initial connection failed'),
+                  );
+                }
+                return Math.min(retries * 100, 3000);
+              },
+            },
+          }),
           max: configService.get<number>('CACHE_MAX', 100),
           ttl: configService.get<number>('CACHE_TTL', 60),
         };
       }
-    })
+    }),
+    DevtoolsModule.register({
+      http: process.env.NODE_ENV !== 'production',
+    }),
   ],
   controllers: [AppController,],
   providers: [AppService],

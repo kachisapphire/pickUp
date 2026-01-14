@@ -215,7 +215,8 @@ export class CategoryService {
             const categories = await this.categoryRepository.find();
             const categoryNames = categories.map((category) => ({
                 id: category.id,
-                name: category.name
+                name: category.name,
+                createdAt: category.createdAt,
             }));
             return {
                 success: true,
@@ -235,7 +236,8 @@ export class CategoryService {
     async getCategoryById(categoryId: string) {
         try {
             const category = await this.categoryRepository.findOne({
-                where: { id: categoryId }
+                where: { id: categoryId },
+                relations: ['product']
             });
             if (!category) {
                 throw new NotFoundException(`category with ID ${categoryId} does not exist`)

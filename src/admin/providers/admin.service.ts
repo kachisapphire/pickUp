@@ -1,10 +1,12 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { UserRole } from "src/auth/enum/user-role.enum";
 import { User } from "src/user/entities/user.entity";
 import { Repository } from "typeorm";
 import * as bcrypt from 'bcrypt';
+import { AdminLoginDto } from "../dtos/login.dto";
+import { AuthService } from "src/auth/providers/auth.service";
 
 @Injectable()
 export class AdminService {
@@ -13,6 +15,7 @@ export class AdminService {
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
         private configService: ConfigService,
+        private readonly authService: AuthService,
     ) { }
 
     async onModuleInit() {
@@ -59,6 +62,38 @@ export class AdminService {
         }
         catch (error) {
             this.logger.error(`Error creating Admin profile: ${error.message}`, error.stack)
+        }
+    }
+
+    async adminLogin(dto: AdminLoginDto) {
+        try {
+            const admin = await this.userRepository.findOne({
+                where: {
+                    email: dto.email,
+                    role: UserRole.ADMIN
+                },
+                select: ['email', 'password', 'id', 'role']
+            });
+            if (!admin) {
+                throw new NotFoundException('Admin account not found');
+            }
+            const isPasswordValid = await bcrypt.compare(dto.password, admin.password);
+            if (!isPasswordValid) {
+                throw new UnauthorizedException('Password is incorrect, try again');
+            }
+            const validate = await this.authService.validateLoginPayload(admin.id, admin.email, admin.role);
+            return {
+                message: 'Successfully validated user',
+                success: true,
+                token: validate.token
+            }
+        }
+        catch (error) {
+            this.logger.error(`Failed to authenticate user: ${error.message}`, error.stack);
+            return {
+                message: 'Error authenticating user',
+                success: false
+            }
         }
     }
 }

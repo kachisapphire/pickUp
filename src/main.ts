@@ -7,7 +7,10 @@ import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const logger = new Logger('bootstrap')
-  const app = await NestFactory.create(AppModule, { abortOnError: false });
+  const app = await NestFactory.create(AppModule, {
+    abortOnError: false,
+    snapshot: true
+  });
   const configService = app.get(ConfigService);
   app.use(cookieParser());
   app.enableCors();

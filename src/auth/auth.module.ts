@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheModule } from '@nestjs/cache-manager';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { S3UploadService } from './providers/s3-upload.service';
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     AuthService,
     MailService,
     JwtStrategy,
+    S3UploadService,
   ],
+  exports: [AuthService]
 })
 export class AuthModule { }

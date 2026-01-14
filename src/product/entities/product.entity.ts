@@ -16,6 +16,12 @@ export class Product {
     @Column({ type: 'decimal', precision: 20, scale: 2, default: 0 })
     price: number
 
+    @Column()
+    quantity: number
+
+    @Column({ default: true })
+    isAvailable: boolean
+
     @ManyToMany(() => Category, (category) => category.product,
         {
             nullable: false
