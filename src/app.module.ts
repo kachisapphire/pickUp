@@ -6,13 +6,14 @@ import { UserModule } from './user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore, } from 'cache-manager-redis-yet';
+import { redisStore } from 'cache-manager-redis-yet';
 import { createRedisErrorHandler } from './utils/redis-error-handler';
 import { CategoryModule } from './category/category.module';
 import { ProductModule } from './product/product.module';
 import { AdminModule } from './admin/admin.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { OrderModule } from './order/order.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { OrderModule } from './order/order.module';
     ProductModule,
     AdminModule,
     OrderModule,
+    PaymentModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -44,7 +46,7 @@ import { OrderModule } from './order/order.module';
             autoLoadEntities: true,
             synchronize: false,
             logging: true,
-          }
+          };
         }
         return {
           type: 'postgres',
@@ -58,15 +60,15 @@ import { OrderModule } from './order/order.module';
           logging: true,
           retryAttempts: 3,
           retryDelay: 3000,
-        }
-      }
+        };
+      },
     }),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => {
+      useFactory: (configService: ConfigService) => {
         const redisErrorHandler = createRedisErrorHandler('CacheModule');
-        const redisUrl = configService.get('REDIS_URL')
+        const redisUrl = configService.get<string>('REDIS_URL');
         if (redisUrl) {
           return {
             store: redisStore({
@@ -75,12 +77,13 @@ import { OrderModule } from './order/order.module';
                 tls: true,
                 rejectUnauthorized: false,
                 reconnectStrategy: (retries) => {
-
                   if (retries > 10) {
-                    return new Error('Connection refused by server')
+                    return new Error('Connection refused by server');
                   }
                   if (retries > 0) {
-                    redisErrorHandler.handleError(new Error('Initial connection failed'))
+                    redisErrorHandler.handleError(
+                      new Error('Initial connection failed'),
+                    );
                     return new Error('The server refused the connection');
                   }
                   // Retry with exponential backoff
@@ -91,7 +94,7 @@ import { OrderModule } from './order/order.module';
             max: configService.get<number>('CACHE_MAX', 100), // Default max
             ttl: configService.get<number>('CACHE_TTL', 60), // Default ttl
           };
-        };
+        }
         return {
           store: redisStore({
             socket: {
@@ -113,13 +116,13 @@ import { OrderModule } from './order/order.module';
           max: configService.get<number>('CACHE_MAX', 100),
           ttl: configService.get<number>('CACHE_TTL', 60),
         };
-      }
+      },
     }),
     DevtoolsModule.register({
       http: process.env.NODE_ENV !== 'production',
     }),
   ],
-  controllers: [AppController,],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule { }

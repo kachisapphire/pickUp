@@ -6,10 +6,10 @@ import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const logger = new Logger('bootstrap')
+  const logger = new Logger('bootstrap');
   const app = await NestFactory.create(AppModule, {
     abortOnError: false,
-    snapshot: true
+    snapshot: true,
   });
   const configService = app.get(ConfigService);
   app.use(cookieParser());
@@ -18,15 +18,13 @@ async function bootstrap() {
     .setTitle('PickUp')
     .setDescription('Api Documentation for PickUp')
     .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        in: 'header',
-      },
-    )
-    .build()
+    .addBearerAuth({
+      type: 'http',
+      scheme: 'bearer',
+      bearerFormat: 'JWT',
+      in: 'header',
+    })
+    .build();
   const document = () => SwaggerModule.createDocument(app, config);
   const options = {
     swaggerOptions: {
@@ -45,7 +43,7 @@ async function bootstrap() {
         'patch',
         'trace',
       ],
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
       onComplete: () => {
         console.log('Swagger UI initialized');
       },
@@ -53,7 +51,7 @@ async function bootstrap() {
     customSiteTitle: 'PickUp API Documentation',
   };
   SwaggerModule.setup('api', app, document, options);
-  const port = configService.get('PORT', process.env.PORT || 3400)
+  const port = configService.get('PORT', process.env.PORT || 3400);
   await app.listen(port);
   logger.log(`Application is running on port ${port}`);
   logger.log(`📚 Swagger UI available at: http://localhost:${port}/api`);

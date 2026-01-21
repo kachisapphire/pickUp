@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer';
 
 export class MailService {
-  private readonly transporter
+  private readonly transporter;
   constructor() {
     this.transporter = nodemailer.createTransport({
       host: process.env.MAIL_HOST,
@@ -9,8 +9,8 @@ export class MailService {
       secure: false,
       auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
-      }
+        pass: process.env.MAIL_PASS,
+      },
     });
   }
   async sendVerificationCode(email: string, code: string) {
@@ -20,14 +20,17 @@ export class MailService {
         to: email,
         subject: `PickUp- Email Verification`,
         text: `Your verification code is: ${code}`,
-        html: this.getVerificationCodeTemplate(code)
-      })
-      console.log(`Verification code sent to ${email}`)
-      return true
-    }
-    catch (error) {
-      console.log(`Failed to send code to ${email}: ${error.message}`, error.stack)
-      return false
+        html: this.getVerificationCodeTemplate(code),
+      });
+      console.log(`Verification code sent to ${email}`);
+      return true;
+    } catch (error: unknown) {
+      if (error instanceof Error)
+        console.log(
+          `Failed to send code to ${email}: ${error.message}`,
+          error.stack,
+        );
+      return false;
     }
   }
   private getVerificationCodeTemplate(code: string): string {

@@ -12,33 +12,26 @@ import { S3UploadService } from './providers/s3-upload.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      User
-    ]),
+    TypeOrmModule.forFeature([User]),
     JwtModule.registerAsync({
       global: true,
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const secret = configService.get('JWT_SECRET');
+        const secret = configService.get<string>('JWT_SECRET');
         if (!secret) {
           throw new Error('JWT secret not configured');
         }
         return {
           secret,
-          signOptions: { expiresIn: '24h' }
-        }
-      }
+          signOptions: { expiresIn: '24h' },
+        };
+      },
     }),
     CacheModule.register(),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    MailService,
-    JwtStrategy,
-    S3UploadService,
-  ],
-  exports: [AuthService]
+  providers: [AuthService, MailService, JwtStrategy, S3UploadService],
+  exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}
